@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { updateUserDto } from './dtos/update-user-dtos';
 import { User } from './interfaces/user-interface';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 import { CreateUserDto } from './dtos/create-user-dtos';
 
 @Injectable()
@@ -35,7 +35,26 @@ export class UsersService {
   ];
 
   private nextId = 3;
-  create(data: CreateUserDto): User{
-    const existingUser = this.users.find((user) => user.email ===data.email)
+  create(data: CreateUserDto): User {
+    const existingUser = this.users.find((user) => user.email === data.email);
+    if (existingUser) {
+      throw new ConflictException(
+        `guest with email ${data.email}  already exists`,
+      );
+    }
+    const newUser: User = {
+      ...data,
+      id: this.nextId++,
+
+      checkInDate: data.checkInDate ? new Date(data.checkInDate) : undefined,
+      checkOutDate: data.checkOutDate ? new Date(data.checkOutDate) : undefined,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    this.users.push(newUser);
+
+    return newUser;
   }
 }
